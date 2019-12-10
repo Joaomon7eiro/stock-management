@@ -6,6 +6,7 @@ class Product extends Model {
       {
         name: Sequelize.STRING,
         price: Sequelize.DOUBLE,
+        quantity: Sequelize.INTEGER,
         image: Sequelize.STRING,
       },
       {
@@ -17,7 +18,10 @@ class Product extends Model {
   }
 
   static associate(models) {
-    this.belongsTo(models.Provider, { foreignKey: 'provider_id' });
+    this.belongsTo(models.Provider, {
+      foreignKey: 'provider_id',
+      as: 'provider',
+    });
     this.belongsTo(models.User, { foreignKey: 'user_id' });
   }
 }

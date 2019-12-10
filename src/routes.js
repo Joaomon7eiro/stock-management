@@ -37,14 +37,16 @@ routes.put('/providers/:id', ProviderController.update);
 routes.get('/providers/:id', ProviderController.show);
 routes.delete('/providers/:id', ProviderController.delete);
 
-routes.get('/sales/:saleId/itens', ItemController.index);
-routes.post('/sales/:saleId/itens', ItemController.create);
-routes.put('/sales/:saleId/itens/:id', ItemController.update);
-routes.get('/sales/:saleId/itens/:id', ItemController.show);
-routes.delete('/sales/:saleId/itens/:id', ItemController.delete);
+routes.get('/sales/:saleId/items', ItemController.index);
+routes.post('/sales/:saleId/items', ItemController.create);
+routes.get('/sales/:saleId/items/:id', ItemController.show);
+// routes.put('/sales/:saleId/items/:id', ItemController.update);
+// routes.delete('/sales/:saleId/items/:id', ItemController.delete);
 
 routes.get('/sales', SaleController.index);
 routes.post('/sales', SaleController.create);
 routes.get('/sales/:id', SaleController.show);
+// routes.put('/sales/:id', SaleController.update);
+// routes.delete('/sales/:id', SaleController.delete);
 
 export default routes;

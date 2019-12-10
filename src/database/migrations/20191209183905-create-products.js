@@ -15,6 +15,10 @@ module.exports = {
         type: Sequelize.DOUBLE,
         allowNull: false,
       },
+      quantity: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+      },
       image: {
         type: Sequelize.STRING,
         allowNull: true,
