@@ -34,6 +34,8 @@ class ItemController {
     req.body.sale_id = saleId;
 
     const newItem = await Item.create(req.body);
+    product.quantity -= quantity;
+    product.save();
 
     return res.json({
       newItem,

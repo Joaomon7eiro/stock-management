@@ -28,13 +28,32 @@ class SaleController {
   }
 
   async index(req, res) {
-    const sales = await Sale.findAll({
+    const { page = 1 } = req.query;
+    const limit = 20;
+
+    const sales = await Sale.findAndCountAll({
       where: { user_id: req.userId },
       attributes: ['id', 'value'],
       include: [{ model: Client, as: 'client', attributes: ['name'] }],
+      limit,
+      order: ['id'],
+      offset: (page - 1) * limit,
     });
 
-    return res.json(sales);
+    let pageNumber = 1;
+
+    if (sales.count !== 0) {
+      if (sales.count % limit === 0) {
+        pageNumber -= 1;
+      }
+      pageNumber = Math.floor(sales.count / 20) + pageNumber;
+    }
+
+    return res.json({
+      sales: sales.rows,
+      page,
+      totalPages: pageNumber,
+    });
   }
 
   async show(req, res) {

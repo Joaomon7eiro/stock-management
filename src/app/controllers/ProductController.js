@@ -1,5 +1,7 @@
 import * as Yup from 'yup';
 
+import { Op } from 'sequelize';
+
 import Product from '../models/Product';
 import Provider from '../models/Provider';
 
@@ -79,18 +81,36 @@ class ProductController {
   }
 
   async index(req, res) {
-    const { page = 1 } = req.query;
+    const { page = 1, query } = req.query;
     const limit = 20;
 
-    const products = await Product.findAll({
-      where: { user_id: req.userId },
+    const whereObj = query
+      ? { name: { [Op.like]: `%${query}%` }, user_id: req.userId }
+      : { user_id: req.userId };
+
+    const products = await Product.findAndCountAll({
+      where: whereObj,
       attributes: ['id', 'name', 'price', 'quantity'],
       include: [{ model: Provider, as: 'provider', attributes: ['name'] }],
       limit,
+      order: ['id'],
       offset: (page - 1) * limit,
     });
 
-    return res.json(products);
+    let pageNumber = 1;
+
+    if (products.count !== 0) {
+      if (products.count % limit === 0) {
+        pageNumber -= 1;
+      }
+      pageNumber = Math.floor(products.count / 20) + pageNumber;
+    }
+
+    return res.json({
+      products: products.rows,
+      page,
+      totalPages: pageNumber,
+    });
   }
 
   async show(req, res) {

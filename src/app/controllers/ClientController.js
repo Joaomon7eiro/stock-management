@@ -1,5 +1,7 @@
 import * as Yup from 'yup';
 
+import { Op } from 'sequelize';
+
 import Client from '../models/Client';
 
 class ClientController {
@@ -80,17 +82,35 @@ class ClientController {
   }
 
   async index(req, res) {
-    const { page = 1 } = req.query;
+    const { page = 1, query } = req.query;
     const limit = 20;
 
-    const clients = await Client.findAll({
-      where: { user_id: req.userId },
+    const whereObj = query
+      ? { name: { [Op.like]: `%${query}%` }, user_id: req.userId }
+      : { user_id: req.userId };
+
+    const clients = await Client.findAndCountAll({
+      where: whereObj,
       attributes: ['id', 'name', 'email', 'phone_number'],
       limit,
+      order: ['id'],
       offset: (page - 1) * limit,
     });
 
-    return res.json(clients);
+    let pageNumber = 1;
+
+    if (clients.count !== 0) {
+      if (clients.count % limit === 0) {
+        pageNumber -= 1;
+      }
+      pageNumber = Math.floor(clients.count / 20) + pageNumber;
+    }
+
+    return res.json({
+      clients: clients.rows,
+      page,
+      totalPages: pageNumber,
+    });
   }
 
   async show(req, res) {

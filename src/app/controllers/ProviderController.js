@@ -1,12 +1,17 @@
 import * as Yup from 'yup';
 
+import { Op } from 'sequelize';
 import Provider from '../models/Provider';
 
 class ProviderController {
   async create(req, res) {
+    const phoneRegExp = /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
+
     const schema = Yup.object().shape({
       name: Yup.string().required(),
-      phone_number: Yup.string().required(),
+      phone_number: Yup.string()
+        .matches(phoneRegExp, 'Phone number is not valid')
+        .required(),
     });
 
     if (!(await schema.isValid(req.body))) {
@@ -34,9 +39,14 @@ class ProviderController {
   }
 
   async update(req, res) {
+    const phoneRegExp = /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
+
     const schema = Yup.object().shape({
       name: Yup.string(),
-      phone_number: Yup.string(),
+      phone_number: Yup.string().matches(
+        phoneRegExp,
+        'Phone number is not valid'
+      ),
     });
 
     if (!(await schema.isValid(req.body))) {
@@ -72,17 +82,35 @@ class ProviderController {
   }
 
   async index(req, res) {
-    const { page = 1 } = req.query;
+    const { page = 1, query } = req.query;
     const limit = 20;
 
-    const providers = await Provider.findAll({
-      where: { user_id: req.userId },
+    const whereObj = query
+      ? { name: { [Op.like]: `%${query}%` }, user_id: req.userId }
+      : { user_id: req.userId };
+
+    const providers = await Provider.findAndCountAll({
+      where: whereObj,
       attributes: ['id', 'name', 'phone_number'],
       limit,
+      order: ['id'],
       offset: (page - 1) * limit,
     });
 
-    return res.json(providers);
+    let pageNumber = 1;
+
+    if (providers.count !== 0) {
+      if (providers.count % limit === 0) {
+        pageNumber -= 1;
+      }
+      pageNumber = Math.floor(providers.count / 20) + pageNumber;
+    }
+
+    return res.json({
+      providers: providers.rows,
+      page,
+      totalPages: pageNumber,
+    });
   }
 
   async show(req, res) {
